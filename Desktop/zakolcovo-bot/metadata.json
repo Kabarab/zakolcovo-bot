@@ -1,0 +1,5 @@
+
+{
+  "name": "Zakolcovo Telegram Bot Server",
+  "description": "A backend server application to power a real Telegram bot for the Zakolcovo restaurant. It uses Node.js and the Gemini API to handle table bookings and food orders."
+}
