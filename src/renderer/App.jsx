@@ -36,7 +36,7 @@ const App = () => {
       setActiveProfiles(prev => ({ ...prev, [profile.id]: 'running' }));
     } else {
       setActiveProfiles(prev => ({ ...prev, [profile.id]: null }));
-      alert('Launch failed: ' + result.error);
+      alert('Ошибка запуска: ' + result.error);
     }
   };
 
@@ -45,7 +45,7 @@ const App = () => {
   );
 
   const handleDelete = async (id) => {
-    if (confirm('Are you sure you want to delete this profile?')) {
+    if (confirm('Вы уверены, что хотите удалить этот профиль?')) {
       await window.electron.deleteProfile(id);
       loadProfiles();
     }
@@ -56,15 +56,15 @@ const App = () => {
       <header className="flex justify-between items-center mb-12">
         <div>
           <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">
-            AntiDetect Browser
+            Антидетект Браузер
           </h1>
-          <p className="text-slate-400 mt-2">Manage independent browsing environments</p>
+          <p className="text-slate-400 mt-2">Управление независимыми средами просмотра</p>
         </div>
         <div className="flex items-center gap-4">
           <div className="relative">
             <input 
               type="text"
-              placeholder="Search profiles..."
+              placeholder="Поиск профилей..."
               className="bg-slate-800/50 border border-slate-700 rounded-xl pl-10 pr-4 py-2 text-sm outline-none focus:border-indigo-500 w-64 transition-all"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -76,7 +76,7 @@ const App = () => {
             className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2 rounded-xl transition-all shadow-lg shadow-indigo-500/20 font-semibold"
           >
             <Plus size={20} />
-            Create
+            Создать
           </button>
         </div>
       </header>
@@ -107,7 +107,7 @@ const App = () => {
                 <Monitor size={14} /> {profile.fingerprint.screen.width}x{profile.fingerprint.screen.height}
               </div>
               <div className="flex items-center gap-1">
-                <Globe size={14} /> {profile.proxy?.host ? profile.proxy.host : 'No Proxy'}
+                <Globe size={14} /> {profile.proxy?.host ? profile.proxy.host : 'Без прокси'}
               </div>
             </div>
 
@@ -121,18 +121,18 @@ const App = () => {
               }`}
             >
               {activeProfiles[profile.id] === 'launching' ? (
-                'Launching...'
+                'Запуск...'
               ) : activeProfiles[profile.id] === 'running' ? (
-                <> <Square size={16} fill="currentColor" /> Stop </>
+                <> <Square size={16} fill="currentColor" /> Стоп </>
               ) : (
-                <> <Play size={16} fill="currentColor" /> Launch </>
+                <> <Play size={16} fill="currentColor" /> Запустить </>
               )}
             </button>
           </div>
         ))}
         {profiles.length === 0 && !loading && (
           <div className="col-span-full py-20 border-2 border-dashed border-slate-700 rounded-3xl flex flex-col items-center justify-center text-slate-500">
-            <p>No profiles found. Create your first one to get started.</p>
+            <p>Профили не найдены. Создайте свой первый профиль.</p>
           </div>
         )}
       </div>

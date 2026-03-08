@@ -1,24 +1,17 @@
-# AntiDetect Browser (zakolcovo-bot)
+# Антидетект Браузер (zakolcovo-bot)
 
-A modern, powerful application for managing isolated browser profiles with custom fingerprints and proxies.
+Современное и мощное приложение для управления изолированными браузерными профилями с индивидуальными отпечатками и прокси.
 
-## Features
+## Функции
 
-- **Independent Contexts**: Each profile has its own cookies, cache, and history.
-- **Fingerprint Protection**: Custom User-Agent and Resolution.
-- **Proxy Routing**: Support for per-profile proxies.
-- **Sleek Interface**: Built with Electron, React, and Lucide Icons.
+- **Независимые контексты**: Свои куки, кэш и история для каждого профиля.
+- **Защита отпечатков**: Кастомный User-Agent, разрешение и шум (Canvas/WebGL/Audio).
+- **Прокси**: Поддержка индивидуальных прокси для каждого профиля.
+- **Современный интерфейс**: Electron, React и Lucide Icons.
 
-## Quick Start
+## Быстрый старт
 
 1. `npm install`
 2. `npx playwright install chromium`
-3. `npm run dev` (starts Vite on 3000)
+3. `npm run dev`
 4. `npm run electron:dev`
-
-## Tech Stack
-
-- **Engine**: Playwright (Chromium)
-- **Frameworks**: Electron, React, Vite
-- **Icons**: Lucide React
-- **Storage**: electron-store

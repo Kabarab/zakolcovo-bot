@@ -33,18 +33,18 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="bg-slate-900 border border-slate-700 w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden flex flex-col">
         <div className="p-6 border-b border-slate-800 flex justify-between items-center">
-          <h2 className="text-2xl font-bold">New Profile</h2>
+          <h2 className="text-2xl font-bold">Новый профиль</h2>
           <button onClick={onClose} className="p-2 hover:bg-slate-800 rounded-lg transition-colors"><X size={20} /></button>
         </div>
 
         <form onSubmit={handleSubmit} className="p-8 space-y-8 overflow-y-auto flex-1">
           {/* General Section */}
           <section>
-            <label className="block text-slate-400 text-sm font-medium mb-3">Profile Name</label>
+            <label className="block text-slate-400 text-sm font-medium mb-3">Название профиля</label>
             <input 
               required
               className="w-full bg-slate-800 border-2 border-slate-700 focus:border-indigo-500 rounded-xl px-4 py-3 outline-none transition-colors"
-              placeholder="e.g., Marketing Account 1"
+              placeholder="например, Маркетинговый Аккаунт 1"
               value={name}
               onChange={(e) => setName(e.target.value)}
             />
@@ -54,25 +54,25 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
           <section>
             <div className="flex items-center gap-2 mb-4">
               <Globe size={18} className="text-indigo-400" />
-              <h3 className="font-semibold text-lg">Proxy Settings</h3>
+              <h3 className="font-semibold text-lg">Настройки прокси</h3>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <input 
                 className="bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 outline-none focus:border-indigo-500 transition-colors"
-                placeholder="Proxy Server Host"
+                placeholder="Хост прокси-сервера"
                 value={proxy.host}
                 onChange={(e) => setProxy({ ...proxy, host: e.target.value })}
               />
               <input 
                 className="bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 outline-none focus:border-indigo-500 transition-colors"
-                placeholder="Port"
+                placeholder="Порт"
                 value={proxy.port}
                 onChange={(e) => setProxy({ ...proxy, port: e.target.value })}
               />
               <div className="relative">
                 <input 
                   className="w-full bg-slate-800 border border-slate-700 rounded-xl pl-10 pr-4 py-3 outline-none focus:border-indigo-500 transition-colors"
-                  placeholder="Username"
+                  placeholder="Имя пользователя"
                   value={proxy.username}
                   onChange={(e) => setProxy({ ...proxy, username: e.target.value })}
                 />
@@ -82,7 +82,7 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                 <input 
                   type="password"
                   className="w-full bg-slate-800 border border-slate-700 rounded-xl pl-10 pr-4 py-3 outline-none focus:border-indigo-500 transition-colors"
-                  placeholder="Password"
+                  placeholder="Пароль"
                   value={proxy.password}
                   onChange={(e) => setProxy({ ...proxy, password: e.target.value })}
                 />
@@ -96,11 +96,11 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                 disabled={!proxy.host || proxyStatus.loading}
                 className="text-xs text-indigo-400 hover:text-indigo-300 font-semibold flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {proxyStatus.loading ? 'Checking...' : 'Check Connection'}
+                {proxyStatus.loading ? 'Проверка...' : 'Проверить соединение'}
               </button>
               {proxyStatus.result && (
                 <span className={`text-xs ${proxyStatus.result.success ? 'text-green-400' : 'text-red-400'}`}>
-                  {proxyStatus.result.success ? `Connected! IP: ${proxyStatus.result.ip}` : `Error: ${proxyStatus.result.error}`}
+                  {proxyStatus.result.success ? `Подключено! IP: ${proxyStatus.result.ip}` : `Ошибка: ${proxyStatus.result.error}`}
                 </span>
               )}
             </div>
@@ -110,7 +110,7 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
           <section>
             <div className="flex items-center gap-2 mb-4">
               <ShieldCheck size={18} className="text-indigo-400" />
-              <h3 className="font-semibold text-lg">Digital Fingerprint</h3>
+              <h3 className="font-semibold text-lg">Цифровой отпечаток</h3>
             </div>
             <div className="space-y-4">
               <div>
@@ -123,7 +123,7 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                   <label className="block text-slate-400 text-xs mb-2">Width</label>
+                   <label className="block text-slate-400 text-xs mb-2">Ширина</label>
                    <input 
                     type="number"
                     className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2 outline-none focus:border-indigo-500"
@@ -132,7 +132,7 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                   />
                 </div>
                 <div>
-                   <label className="block text-slate-400 text-xs mb-2">Height</label>
+                   <label className="block text-slate-400 text-xs mb-2">Высота</label>
                    <input 
                     type="number"
                     className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2 outline-none focus:border-indigo-500"
@@ -148,8 +148,8 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                     <Monitor size={18} />
                   </div>
                   <div>
-                    <p className="font-medium">Canvas Noise</p>
-                    <p className="text-xs text-slate-500">Add subtle noise to prevent canvas fingerprinting</p>
+                    <p className="font-medium">Шум Canvas</p>
+                    <p className="text-xs text-slate-500">Добавляет шум для защиты от фингерпринтинга Canvas</p>
                   </div>
                 </div>
                 <button 
@@ -167,8 +167,8 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                     <Monitor size={18} />
                   </div>
                   <div>
-                    <p className="font-medium">WebGL Spoofing</p>
-                    <p className="text-xs text-slate-500">Spoof Graphics Card and Vendor metadata</p>
+                    <p className="font-medium">Подмена WebGL</p>
+                    <p className="text-xs text-slate-500">Подменяет данные о видеокарте и вендоре</p>
                   </div>
                 </div>
                 <button 
@@ -186,8 +186,8 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                     <Monitor size={18} />
                   </div>
                   <div>
-                    <p className="font-medium">Audio Protection</p>
-                    <p className="text-xs text-slate-500">Add subtle noise to AudioContext fingerprint</p>
+                    <p className="font-medium">Защита Audio</p>
+                    <p className="text-xs text-slate-500">Добавляет шум к отпечатку AudioContext</p>
                   </div>
                 </div>
                 <button 
@@ -213,14 +213,14 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
               value={fingerprint.cookies}
               onChange={(e) => setFingerprint({ ...fingerprint, cookies: e.target.value })}
             />
-            <p className="text-[10px] text-slate-500 mt-2">Paste cookies in JSON format to restore sessions.</p>
+            <p className="text-[10px] text-slate-500 mt-2">Вставьте куки в формате JSON для восстановления сессий.</p>
           </section>
         </form>
 
         <div className="p-6 bg-slate-800/50 border-t border-slate-800 flex justify-end gap-4">
-          <button onClick={onClose} className="px-6 py-3 text-slate-400 hover:text-white transition-colors">Cancel</button>
+          <button onClick={onClose} className="px-6 py-3 text-slate-400 hover:text-white transition-colors">Отмена</button>
           <button onClick={handleSubmit} className="px-8 py-3 bg-indigo-600 hover:bg-indigo-500 rounded-xl font-bold transition-all shadow-lg shadow-indigo-500/20">
-            Save Profile
+            Сохранить профиль
           </button>
         </div>
       </div>
