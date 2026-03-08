@@ -54,6 +54,27 @@ ipcMain.handle('delete-profile', async (event, id) => {
   return await deleteProfile(id);
 });
 
+ipcMain.handle('check-proxy', async (event, proxy) => {
+  try {
+    const { chromium } = await import('playwright');
+    const browser = await chromium.launch({
+      proxy: {
+        server: `${proxy.protocol || 'http'}://${proxy.host}:${proxy.port}`,
+        username: proxy.username,
+        password: proxy.password,
+      }
+    });
+    const context = await browser.newContext();
+    const page = await context.newPage();
+    await page.goto('https://api.ipify.org', { timeout: 10000 });
+    const ip = await page.textContent('body');
+    await browser.close();
+    return { success: true, ip };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
 ipcMain.handle('launch-profile', async (event, profile) => {
   try {
     await launchBrowser(profile);

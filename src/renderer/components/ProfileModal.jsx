@@ -7,10 +7,21 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
   const [fingerprint, setFingerprint] = useState({
     userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
     screen: { width: 1920, height: 1080 },
-    deviceScaleFactor: 1
+    deviceScaleFactor: 1,
+    canvasNoise: true,
+    webglSpoofing: true,
+    audioNoise: true,
+    cookies: ''
   });
+  const [proxyStatus, setProxyStatus] = useState({ loading: false, result: null });
 
   if (!isOpen) return null;
+
+  const handleCheckProxy = async () => {
+    setProxyStatus({ loading: true, result: null });
+    const result = await window.electron.checkProxy(proxy);
+    setProxyStatus({ loading: false, result });
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -78,6 +89,21 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                 <Lock size={16} className="absolute left-3 top-4 text-slate-500" />
               </div>
             </div>
+            <div className="mt-4 flex items-center justify-between">
+              <button 
+                type="button"
+                onClick={handleCheckProxy}
+                disabled={!proxy.host || proxyStatus.loading}
+                className="text-xs text-indigo-400 hover:text-indigo-300 font-semibold flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {proxyStatus.loading ? 'Checking...' : 'Check Connection'}
+              </button>
+              {proxyStatus.result && (
+                <span className={`text-xs ${proxyStatus.result.success ? 'text-green-400' : 'text-red-400'}`}>
+                  {proxyStatus.result.success ? `Connected! IP: ${proxyStatus.result.ip}` : `Error: ${proxyStatus.result.error}`}
+                </span>
+              )}
+            </div>
           </section>
 
           {/* Fingerprint Section */}
@@ -115,7 +141,79 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                   />
                 </div>
               </div>
+              
+              <div className="flex items-center justify-between p-4 bg-slate-800/30 rounded-xl border border-slate-800">
+                <div className="flex items-center gap-3">
+                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${fingerprint.canvasNoise ? 'bg-indigo-500/20 text-indigo-400' : 'bg-slate-700 text-slate-500'}`}>
+                    <Monitor size={18} />
+                  </div>
+                  <div>
+                    <p className="font-medium">Canvas Noise</p>
+                    <p className="text-xs text-slate-500">Add subtle noise to prevent canvas fingerprinting</p>
+                  </div>
+                </div>
+                <button 
+                  type="button"
+                  onClick={() => setFingerprint({ ...fingerprint, canvasNoise: !fingerprint.canvasNoise })}
+                  className={`w-12 h-6 rounded-full transition-colors relative ${fingerprint.canvasNoise ? 'bg-indigo-600' : 'bg-slate-700'}`}
+                >
+                  <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${fingerprint.canvasNoise ? 'left-7' : 'left-1'}`} />
+                </button>
+              </div>
+
+              <div className="flex items-center justify-between p-4 bg-slate-800/30 rounded-xl border border-slate-800">
+                <div className="flex items-center gap-3">
+                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${fingerprint.webglSpoofing ? 'bg-indigo-500/20 text-indigo-400' : 'bg-slate-700 text-slate-500'}`}>
+                    <Monitor size={18} />
+                  </div>
+                  <div>
+                    <p className="font-medium">WebGL Spoofing</p>
+                    <p className="text-xs text-slate-500">Spoof Graphics Card and Vendor metadata</p>
+                  </div>
+                </div>
+                <button 
+                  type="button"
+                  onClick={() => setFingerprint({ ...fingerprint, webglSpoofing: !fingerprint.webglSpoofing })}
+                  className={`w-12 h-6 rounded-full transition-colors relative ${fingerprint.webglSpoofing ? 'bg-indigo-600' : 'bg-slate-700'}`}
+                >
+                  <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${fingerprint.webglSpoofing ? 'left-7' : 'left-1'}`} />
+                </button>
+              </div>
+
+              <div className="flex items-center justify-between p-4 bg-slate-800/30 rounded-xl border border-slate-800">
+                <div className="flex items-center gap-3">
+                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${fingerprint.audioNoise ? 'bg-indigo-500/20 text-indigo-400' : 'bg-slate-700 text-slate-500'}`}>
+                    <Monitor size={18} />
+                  </div>
+                  <div>
+                    <p className="font-medium">Audio Protection</p>
+                    <p className="text-xs text-slate-500">Add subtle noise to AudioContext fingerprint</p>
+                  </div>
+                </div>
+                <button 
+                  type="button"
+                  onClick={() => setFingerprint({ ...fingerprint, audioNoise: !fingerprint.audioNoise })}
+                  className={`w-12 h-6 rounded-full transition-colors relative ${fingerprint.audioNoise ? 'bg-indigo-600' : 'bg-slate-700'}`}
+                >
+                  <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${fingerprint.audioNoise ? 'left-7' : 'left-1'}`} />
+                </button>
+              </div>
             </div>
+          </section>
+
+          {/* Cookies Section */}
+          <section>
+            <div className="flex items-center gap-2 mb-4">
+              <Lock size={18} className="text-indigo-400" />
+              <h3 className="font-semibold text-lg">Cookies (JSON)</h3>
+            </div>
+            <textarea 
+              className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-xs h-32 outline-none focus:border-indigo-500 font-mono"
+              placeholder='[{"name": "session", "value": "...", "domain": "..."}]'
+              value={fingerprint.cookies}
+              onChange={(e) => setFingerprint({ ...fingerprint, cookies: e.target.value })}
+            />
+            <p className="text-[10px] text-slate-500 mt-2">Paste cookies in JSON format to restore sessions.</p>
           </section>
         </form>
 

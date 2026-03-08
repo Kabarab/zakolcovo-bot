@@ -6,6 +6,8 @@ const App = () => {
   const [profiles, setProfiles] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [activeProfiles, setActiveProfiles] = useState({}); // { id: 'launching' | 'running' | 'stopping' }
 
   useEffect(() => {
     loadProfiles();
@@ -28,11 +30,19 @@ const App = () => {
   };
 
   const handleLaunch = async (profile) => {
+    setActiveProfiles(prev => ({ ...prev, [profile.id]: 'launching' }));
     const result = await window.electron.launchProfile(profile);
-    if (!result.success) {
+    if (result.success) {
+      setActiveProfiles(prev => ({ ...prev, [profile.id]: 'running' }));
+    } else {
+      setActiveProfiles(prev => ({ ...prev, [profile.id]: null }));
       alert('Launch failed: ' + result.error);
     }
   };
+
+  const filteredProfiles = profiles.filter(p => 
+    p.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const handleDelete = async (id) => {
     if (confirm('Are you sure you want to delete this profile?')) {
@@ -50,20 +60,35 @@ const App = () => {
           </h1>
           <p className="text-slate-400 mt-2">Manage independent browsing environments</p>
         </div>
-        <button 
-          onClick={() => setIsModalOpen(true)}
-          className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-3 rounded-xl transition-all shadow-lg shadow-indigo-500/20 font-semibold"
-        >
-          <Plus size={20} />
-          Create Profile
-        </button>
+        <div className="flex items-center gap-4">
+          <div className="relative">
+            <input 
+              type="text"
+              placeholder="Search profiles..."
+              className="bg-slate-800/50 border border-slate-700 rounded-xl pl-10 pr-4 py-2 text-sm outline-none focus:border-indigo-500 w-64 transition-all"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+            <Settings size={16} className="absolute left-3 top-2.5 text-slate-500" />
+          </div>
+          <button 
+            onClick={() => setIsModalOpen(true)}
+            className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2 rounded-xl transition-all shadow-lg shadow-indigo-500/20 font-semibold"
+          >
+            <Plus size={20} />
+            Create
+          </button>
+        </div>
       </header>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {profiles.map(profile => (
-          <div key={profile.id} className="bg-slate-800/50 border border-slate-700 p-6 rounded-2xl hover:border-slate-500 transition-all group">
+        {filteredProfiles.map(profile => (
+          <div key={profile.id} className="glass border border-slate-700/50 p-6 rounded-2xl hover:border-indigo-500/50 transition-all group relative overflow-hidden">
+            {activeProfiles[profile.id] === 'running' && (
+              <div className="absolute top-0 left-0 w-1 h-full bg-green-500" />
+            )}
             <div className="flex justify-between items-start mb-4">
-              <div className="w-12 h-12 bg-indigo-500/10 rounded-xl flex items-center justify-center text-indigo-400">
+              <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${activeProfiles[profile.id] ? 'bg-green-500/10 text-green-400' : 'bg-indigo-500/10 text-indigo-400'}`}>
                 <Globe size={24} />
               </div>
               <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -88,10 +113,20 @@ const App = () => {
 
             <button 
               onClick={() => handleLaunch(profile)}
-              className="w-full flex items-center justify-center gap-2 py-3 bg-slate-700 hover:bg-slate-600 rounded-xl transition-colors font-medium"
+              disabled={activeProfiles[profile.id] === 'launching'}
+              className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl transition-all font-medium ${
+                activeProfiles[profile.id] === 'running' 
+                ? 'bg-green-600/20 text-green-400 border border-green-500/30' 
+                : 'bg-slate-700 hover:bg-slate-600 text-white'
+              }`}
             >
-              <Play size={16} fill="currentColor" />
-              Launch
+              {activeProfiles[profile.id] === 'launching' ? (
+                'Launching...'
+              ) : activeProfiles[profile.id] === 'running' ? (
+                <> <Square size={16} fill="currentColor" /> Stop </>
+              ) : (
+                <> <Play size={16} fill="currentColor" /> Launch </>
+              )}
             </button>
           </div>
         ))}

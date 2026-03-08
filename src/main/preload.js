@@ -5,4 +5,5 @@ contextBridge.exposeInMainWorld('electron', {
   saveProfile: (profile) => ipcRenderer.invoke('save-profile', profile),
   deleteProfile: (id) => ipcRenderer.invoke('delete-profile', id),
   launchProfile: (profile) => ipcRenderer.invoke('launch-profile', profile),
+  checkProxy: (proxy) => ipcRenderer.invoke('check-proxy', proxy),
 });
