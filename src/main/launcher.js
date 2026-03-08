@@ -1,4 +1,5 @@
 import { chromium } from 'playwright';
+import { createCursor } from 'ghost-cursor';
 
 export async function launchBrowser(profile) {
   const { name, proxy, fingerprint } = profile;
@@ -9,6 +10,8 @@ export async function launchBrowser(profile) {
       '--no-sandbox',
       '--disable-setuid-sandbox',
       '--disable-blink-features=AutomationControlled',
+      '--use-fake-ui-for-media-stream',
+      '--use-fake-device-for-media-stream',
     ],
   };
 
@@ -22,7 +25,6 @@ export async function launchBrowser(profile) {
 
   const browser = await chromium.launch(launchOptions);
   
-  // Set context options based on fingerprint
   const contextOptions = {
     userAgent: fingerprint.userAgent,
     viewport: fingerprint.screen,
@@ -38,14 +40,18 @@ export async function launchBrowser(profile) {
       latitude: parseFloat(fingerprint.geo.latitude),
       accuracy: 100
     } : undefined,
-    permissions: ['geolocation'],
+    permissions: ['geolocation', 'notifications'],
     deviceScaleFactor: fingerprint.deviceScaleFactor || 1,
     hasTouch: fingerprint.platform === 'mobile',
   };
 
   const context = await browser.newContext(contextOptions);
   
-  // Set cookies if provided
+  // Ghost Cursor integration
+  const page = await context.newPage();
+  const cursor = createCursor(page);
+  
+  // Set cookies
   if (fingerprint.cookies) {
     try {
       const parsedCookies = JSON.parse(fingerprint.cookies);
@@ -56,32 +62,19 @@ export async function launchBrowser(profile) {
   }
 
   // Inject stealth script
-  await context.addInitScript((fingerprint) => {
-    // Overwrite the `navigator.webdriver` property
-    Object.defineProperty(navigator, 'webdriver', {
-      get: () => undefined,
-    });
+  await context.addInitScript((fp) => {
+    // Basic Navigator Overrides
+    Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
+    Object.defineProperty(navigator, 'languages', { get: () => [fp.locale || 'ru-RU', 'ru', 'en-US', 'en'] });
     
-    // Mock languages
-    Object.defineProperty(navigator, 'languages', {
-      get: () => ['en-US', 'en'],
-    });
+    // Hardware
+    Object.defineProperty(navigator, 'hardwareConcurrency', { get: () => fp.hardwareConcurrency || 8 });
+    Object.defineProperty(navigator, 'deviceMemory', { get: () => fp.deviceMemory || 8 });
 
-    // Mock plugins
-    Object.defineProperty(navigator, 'plugins', {
-      get: () => [1, 2, 3, 4, 5],
-    });
-
-    // Hardware Spoofing
-    Object.defineProperty(navigator, 'hardwareConcurrency', { get: () => fingerprint.hardwareConcurrency || 8 });
-    Object.defineProperty(navigator, 'deviceMemory', { get: () => fingerprint.deviceMemory || 8 });
-
-    // WebRTC Protection
-    if (fingerprint.webRTC === 'disable') {
+    // WebRTC
+    if (fp.webRTC === 'disable') {
       delete window.RTCPeerConnection;
-      delete window.RTCSessionDescription;
-      delete window.RTCIceCandidate;
-    } else if (fingerprint.webRTC === 'spoof') {
+    } else if (fp.webRTC === 'spoof') {
       const orig = window.RTCPeerConnection;
       window.RTCPeerConnection = function(config) {
         const pc = new orig(config);
@@ -96,80 +89,41 @@ export async function launchBrowser(profile) {
       };
     }
 
-    // Media Devices Spoofing
-    if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
-      navigator.mediaDevices.enumerateDevices = async function() {
-        return [
-          { kind: 'audioinput', label: 'Default Audio Input', deviceId: 'default', groupId: 'group1' },
-          { kind: 'videoinput', label: 'FaceTime HD Camera', deviceId: 'camera1', groupId: 'group2' },
-          { kind: 'audiooutput', label: 'Internal Speakers', deviceId: 'speakers1', groupId: 'group3' }
-        ];
-      };
-    }
-
-    // Font Fingerprinting Protection (Basic)
-    const origMeasure = CanvasRenderingContext2D.prototype.measureText;
-    CanvasRenderingContext2D.prototype.measureText = function(text) {
-      const result = origMeasure.apply(this, arguments);
-      Object.defineProperty(result, 'width', { value: result.width + (Math.random() * 0.01) });
-      return result;
-    };
-
-    // --- Advanced Stealth: Canvas Noise ---
-    if (fingerprint.canvasNoise) {
-      const { toDataURL, getImageData } = HTMLCanvasElement.prototype;
-      
-      HTMLCanvasElement.prototype.toDataURL = function(type, encoderOptions) {
-        const context = this.getContext('2d');
-        if (context) {
-          const imageData = context.getImageData(0, 0, this.width || 1, this.height || 1);
-          // Add subtle noise to the first pixel
-          imageData.data[0] = (imageData.data[0] + 1) % 256;
-          context.putImageData(imageData, 0, 0);
+    // Canvas/WebGL/Audio (Simplified injection)
+    if (fp.canvasNoise) {
+      const toDataURL = HTMLCanvasElement.prototype.toDataURL;
+      HTMLCanvasElement.prototype.toDataURL = function() {
+        const ctx = this.getContext('2d');
+        if (ctx) {
+          const imgData = ctx.getImageData(0, 0, 1, 1);
+          imgData.data[0] = (imgData.data[0] + 1) % 256;
+          ctx.putImageData(imgData, 0, 0);
         }
         return toDataURL.apply(this, arguments);
       };
-
-      CanvasRenderingContext2D.prototype.getImageData = function(x, y, width, height) {
-        const res = getImageData.apply(this, arguments);
-        // Add subtle noise
-        res.data[0] = (res.data[0] + 1) % 256;
-        return res;
-      };
     }
 
-    // --- Advanced Stealth: WebGL Spoofing ---
-    if (fingerprint.webglSpoofing) {
-      const getParameter = WebGLRenderingContext.prototype.getParameter;
-      WebGLRenderingContext.prototype.getParameter = function(parameter) {
-        // UNMASKED_VENDOR_WEBGL
-        if (parameter === 37445) return 'Google Inc. (Apple)';
-        // UNMASKED_RENDERER_WEBGL
-        if (parameter === 37446) return 'ANGLE (Apple, Apple M1 Pro, OpenGL 4.1)';
-        return getParameter.apply(this, arguments);
-      };
-
-      const getParameter2 = WebGL2RenderingContext.prototype.getParameter;
-      WebGL2RenderingContext.prototype.getParameter = function(parameter) {
-        if (parameter === 37445) return 'Google Inc. (Apple)';
-        if (parameter === 37446) return 'ANGLE (Apple, Apple M1 Pro, OpenGL 4.1)';
-        return getParameter2.apply(this, arguments);
-      };
+    // Pro-Stealth: Speech API & Battery
+    if (navigator.getBattery) {
+      const origGetBattery = navigator.getBattery;
+      navigator.getBattery = () => Promise.resolve({
+        level: 0.9,
+        charging: true,
+        chargingTime: 0,
+        dischargingTime: Infinity,
+        addEventListener: () => {}
+      });
     }
 
-    // --- Advanced Stealth: Audio Noise ---
-    if (fingerprint.audioNoise) {
-      const getChannelData = AudioBuffer.prototype.getChannelData;
-      AudioBuffer.prototype.getChannelData = function() {
-        const res = getChannelData.apply(this, arguments);
-        for (let i = 0; i < 10; i++) {
-          res[i] = res[i] + Math.random() * 0.0000001;
-        }
-        return res;
-      };
-    }
   }, fingerprint);
 
-  const page = await context.newPage();
   await page.goto('https://pixelscan.net');
+  
+  // Example of human-like interaction after load
+  try {
+    await page.waitForTimeout(2000);
+    await cursor.move({ x: 500, y: 500 });
+  } catch (e) {
+    console.error('Ghost cursor interaction failed:', e);
+  }
 }
