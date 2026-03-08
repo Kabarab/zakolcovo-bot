@@ -22,10 +22,25 @@ export async function launchBrowser(profile) {
 
   const browser = await chromium.launch(launchOptions);
   
+  // Set context options based on fingerprint
   const contextOptions = {
-    userAgent: fingerprint.userAgent || 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
-    viewport: fingerprint.screen || { width: 1920, height: 1080 },
+    userAgent: fingerprint.userAgent,
+    viewport: fingerprint.screen,
+    proxy: proxy.host ? {
+      server: `${proxy.protocol || 'http'}://${proxy.host}:${proxy.port}`,
+      username: proxy.username,
+      password: proxy.password,
+    } : undefined,
+    locale: fingerprint.locale || 'ru-RU',
+    timezoneId: fingerprint.timezone || 'Europe/Moscow',
+    geolocation: fingerprint.geo ? {
+      longitude: parseFloat(fingerprint.geo.longitude),
+      latitude: parseFloat(fingerprint.geo.latitude),
+      accuracy: 100
+    } : undefined,
+    permissions: ['geolocation'],
     deviceScaleFactor: fingerprint.deviceScaleFactor || 1,
+    hasTouch: fingerprint.platform === 'mobile',
   };
 
   const context = await browser.newContext(contextOptions);
@@ -56,6 +71,49 @@ export async function launchBrowser(profile) {
     Object.defineProperty(navigator, 'plugins', {
       get: () => [1, 2, 3, 4, 5],
     });
+
+    // Hardware Spoofing
+    Object.defineProperty(navigator, 'hardwareConcurrency', { get: () => fingerprint.hardwareConcurrency || 8 });
+    Object.defineProperty(navigator, 'deviceMemory', { get: () => fingerprint.deviceMemory || 8 });
+
+    // WebRTC Protection
+    if (fingerprint.webRTC === 'disable') {
+      delete window.RTCPeerConnection;
+      delete window.RTCSessionDescription;
+      delete window.RTCIceCandidate;
+    } else if (fingerprint.webRTC === 'spoof') {
+      const orig = window.RTCPeerConnection;
+      window.RTCPeerConnection = function(config) {
+        const pc = new orig(config);
+        const origCreateOffer = pc.createOffer;
+        pc.createOffer = function() {
+          return origCreateOffer.apply(pc, arguments).then(offer => {
+            offer.sdp = offer.sdp.replace(/(\d{1,3}\.){3}\d{1,3}/g, '192.168.1.100');
+            return offer;
+          });
+        };
+        return pc;
+      };
+    }
+
+    // Media Devices Spoofing
+    if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
+      navigator.mediaDevices.enumerateDevices = async function() {
+        return [
+          { kind: 'audioinput', label: 'Default Audio Input', deviceId: 'default', groupId: 'group1' },
+          { kind: 'videoinput', label: 'FaceTime HD Camera', deviceId: 'camera1', groupId: 'group2' },
+          { kind: 'audiooutput', label: 'Internal Speakers', deviceId: 'speakers1', groupId: 'group3' }
+        ];
+      };
+    }
+
+    // Font Fingerprinting Protection (Basic)
+    const origMeasure = CanvasRenderingContext2D.prototype.measureText;
+    CanvasRenderingContext2D.prototype.measureText = function(text) {
+      const result = origMeasure.apply(this, arguments);
+      Object.defineProperty(result, 'width', { value: result.width + (Math.random() * 0.01) });
+      return result;
+    };
 
     // --- Advanced Stealth: Canvas Noise ---
     if (fingerprint.canvasNoise) {

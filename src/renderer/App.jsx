@@ -51,6 +51,21 @@ const App = () => {
     }
   };
 
+  const handleBulkCreate = async () => {
+    const name = prompt('Базовое имя для профилей:', 'Профиль');
+    const count = prompt('Количество профилей:', '5');
+    if (name && count) {
+      const result = await window.electron.bulkCreate({
+        baseName: name,
+        count: parseInt(count),
+        proxy: {}
+      });
+      if (result.success) {
+        loadProfiles();
+      }
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-900 text-slate-100 flex flex-col p-8">
       <header className="flex justify-between items-center mb-12">
@@ -71,6 +86,12 @@ const App = () => {
             />
             <Settings size={16} className="absolute left-3 top-2.5 text-slate-500" />
           </div>
+          <button 
+            onClick={handleBulkCreate}
+            className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-xl transition-all border border-slate-700 text-sm font-medium"
+          >
+            Массовое создание
+          </button>
           <button 
             onClick={() => setIsModalOpen(true)}
             className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2 rounded-xl transition-all shadow-lg shadow-indigo-500/20 font-semibold"
